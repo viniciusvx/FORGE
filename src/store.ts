@@ -223,7 +223,7 @@ export function addRoutineExercises(): number {
   return fresh.length;
 }
 
-const SEED_FLAG = 'forge.seed.minhaficha.v2';
+const SEED_FLAG = 'forge.seed.minhaficha.v3';
 
 export function hasMyPlan(): boolean {
   return getPlans().some(p => p.name === MY_PLAN_NAME);

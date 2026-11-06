@@ -12,7 +12,7 @@ export interface MyPlanItem {
 export interface MyPlanDay { label: string; weekday: number; items: MyPlanItem[]; }
 
 export const MY_PLAN_NAME = 'Minha ficha';
-export const MY_PLAN_GOAL = 'Preparatórias não contam no volume. Válidas: 1ª com 2–3 RIR, 2ª com 1–2 RIR, 3ª com 0–1 RIR. Pernas (Smith, terra): 1–2 RIR na última.';
+export const MY_PLAN_GOAL = 'Preparatórias: 2 no primeiro exercício pesado do grupo, sem chegar perto da falha, sem contar no volume. Válidas: 1ª 2–3 RIR, 2ª 1–2 RIR, 3ª 0–1 RIR. Pernas (Smith, terra): 1–2 RIR na última.';
 
 export const MY_PLAN_DAYS: MyPlanDay[] = [
   {
@@ -41,9 +41,9 @@ export const MY_PLAN_DAYS: MyPlanDay[] = [
       { name: 'Agachamento Smith', key: 'agachamento-smith', equipment: 'machine', sets: 3, repsMin: 8, repsMax: 12, warmup: 2 },
       { name: 'Leg press deitado', key: 'leg-press-deitado', equipment: 'machine', sets: 3, repsMin: 8, repsMax: 12 },
       { name: 'Cadeira extensora', key: 'cadeira-extensora', equipment: 'machine', sets: 2, repsMin: 10, repsMax: 15 },
-      { name: 'Cadeira flexora', key: 'cadeira-flexora', equipment: 'machine', sets: 3, repsMin: 10, repsMax: 15, warmup: 2 },
+      { name: 'Cadeira flexora', key: 'cadeira-flexora', equipment: 'machine', sets: 3, repsMin: 10, repsMax: 15 },
       { name: 'Terra romeno com halteres', key: 'terra-romeno-halteres', equipment: 'dumbbell', sets: 2, repsMin: 8, repsMax: 12 },
-      { name: 'Panturrilha máquina', key: 'panturrilha', equipment: 'machine', sets: 3, repsMin: 10, repsMax: 20, warmup: 2 },
+      { name: 'Panturrilha máquina', key: 'panturrilha', equipment: 'machine', sets: 3, repsMin: 10, repsMax: 20 },
     ],
   },
   {
@@ -63,7 +63,7 @@ export const MY_PLAN_DAYS: MyPlanDay[] = [
       { name: 'Peck deck', key: 'peck-deck', equipment: 'machine', sets: 2, repsMin: 10, repsMax: 15 },
       { name: 'Puxada alta', key: 'puxada-alta-polia', equipment: 'cable', sets: 2, repsMin: 8, repsMax: 12, warmup: 2 },
       { name: 'Remada baixa máquina pegada fechada', key: 'remada-baixa-fechada', equipment: 'machine', sets: 2, repsMin: 8, repsMax: 12 },
-      { name: 'Rosca inversa na polia', key: 'rosca-inversa', equipment: 'cable', sets: 2, repsMin: 12, repsMax: 15, warmup: 2 },
+      { name: 'Rosca inversa na polia', key: 'rosca-inversa', equipment: 'cable', sets: 2, repsMin: 12, repsMax: 15 },
     ],
   },
 ];
