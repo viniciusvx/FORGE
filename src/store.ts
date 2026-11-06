@@ -1,5 +1,6 @@
 import { STARTER_EXERCISES } from './data/starterExercises';
-import { ANATOMY_EXERCISES, resolveAnatomy } from './anatomy/data';
+import { ANATOMY_EXERCISES, resolveAnatomy, norm, getAnatomy } from './anatomy/data';
+import { MY_PLAN_DAYS, MY_PLAN_GOAL, MY_PLAN_NAME } from './data/myPlan';
 import type { Exercise, WorkoutPlan, WorkoutSession, BodyMeasurement, UserPrefs } from './types';
 
 const KEYS = {
@@ -219,4 +220,45 @@ export function addRoutineExercises(): number {
   }));
   write(KEYS.exercises, [...existing, ...fresh]);
   return fresh.length;
+}
+
+const SEED_FLAG = 'forge.seed.minhaficha.v1';
+
+export function hasMyPlan(): boolean {
+  return getPlans().some(p => p.name === MY_PLAN_NAME);
+}
+
+export function seedMyPlan(): void {
+  const exercises = getExercises();
+  const now = Date.now();
+  const byName = new Map(exercises.map(e => [norm(e.name), e]));
+  const ensure = (name: string, key: string, equipment?: Exercise['equipment']): Exercise => {
+    const found = byName.get(norm(name));
+    if (found) return found;
+    const a = getAnatomy(key);
+    const ex: Exercise = {
+      id: uid(), name, muscleGroup: a?.group ?? 'other', secondaryMuscles: [],
+      equipment: equipment ?? a?.equipment ?? 'other', notes: '', createdAt: now, mapKey: key,
+    };
+    exercises.push(ex);
+    byName.set(norm(name), ex);
+    return ex;
+  };
+  const days = MY_PLAN_DAYS.map(d => ({
+    id: uid(), label: d.label, weekday: d.weekday,
+    exercises: d.items.map(it => ({
+      id: uid(), exerciseId: ensure(it.name, it.key, it.equipment).id,
+      sets: 3, repsMin: 8, repsMax: 12, restSeconds: 90, technique: 'normal' as const, notes: '',
+    })),
+  }));
+  write(KEYS.exercises, exercises);
+  write(KEYS.plans, [...getPlans(), { id: uid(), name: MY_PLAN_NAME, goal: MY_PLAN_GOAL, days, createdAt: now, updatedAt: now }]);
+}
+
+export function seedMyPlanOnce(): void {
+  try {
+    if (localStorage.getItem(SEED_FLAG)) return;
+    if (!hasMyPlan()) seedMyPlan();
+    localStorage.setItem(SEED_FLAG, '1');
+  } catch {}
 }

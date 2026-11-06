@@ -73,7 +73,24 @@ export default function Home({ onNavigate }: Props) {
               ))}
             </div>
             {(() => {
-              const plan = plans[0];
+              const plan = plans.find(p => p.days.some(d => d.weekday !== undefined)) ?? plans[0];
+              const scheduled = plan.days.some(d => d.weekday !== undefined);
+              if (scheduled) {
+                const wd = new Date().getDay();
+                const names = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+                const today = plan.days.find(d => d.weekday === wd);
+                return today && today.exercises.length > 0 ? (
+                  <button className="btn btn-primary btn-full btn-lg" style={{ marginTop: 12 }}
+                    onClick={() => onNavigate({ screen: 'workout', planId: plan.id, dayId: today.id })}>
+                    <DumbbellIcon size={18} />
+                    Hoje ({names[wd]}): {today.label.replace(/^[^·]*·\s*/, '')}
+                  </button>
+                ) : (
+                  <div className="card" style={{ marginTop: 12, textAlign: 'center', fontSize: 14 }}>
+                    Hoje ({names[wd]}) é dia de descanso na sua ficha.
+                  </div>
+                );
+              }
               const nextId = suggestNextDay(plan.id);
               const nextDay = plan.days.find(d => d.id === nextId);
               return nextDay && nextDay.exercises.length > 0 ? (

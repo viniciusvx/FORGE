@@ -31,6 +31,7 @@ export interface PlannedExercise {
 export interface PlanDay {
   id: string;
   label: string;
+  weekday?: number;
   exercises: PlannedExercise[];
 }
 

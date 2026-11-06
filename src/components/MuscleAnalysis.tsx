@@ -141,6 +141,13 @@ export default function MuscleAnalysis({ exercise }: Props) {
         </div>
       ))}
 
+      {exercise.evidence && (
+        <div style={{ marginBottom: 14 }}>
+          <div className="label-xs" style={{ marginBottom: 4 }}>Base científica</div>
+          <div style={{ fontSize: 13, lineHeight: 1.55, color: 'rgba(239,237,231,0.7)' }}>{exercise.evidence}</div>
+        </div>
+      )}
+
       <div style={{ fontSize: 11, color: 'rgba(239,237,231,0.4)', lineHeight: 1.5 }}>
         Ênfase relativa: nenhum exercício isola completamente um músculo ou cabeça muscular, e o estímulo varia com anatomia, amplitude, técnica e equipamento. Ilustração esquemática.
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { View, WorkoutPlan } from '../types';
-import { getPlans, savePlan, suggestNextDay, uid } from '../store';
+import { getPlans, savePlan, suggestNextDay, uid, hasMyPlan, seedMyPlan } from '../store';
 import { PlusIcon, ClipboardIcon, ChevronRightIcon, CopyIcon, PlayIcon } from '../components/Icons';
 
 interface Props { onNavigate: (v: View) => void; }
@@ -33,6 +33,12 @@ export default function Plans({ onNavigate }: Props) {
       </div>
 
       <div className="page-inner">
+        {!hasMyPlan() && (
+          <button className="btn btn-outline btn-full" style={{ marginBottom: 14 }}
+            onClick={() => { seedMyPlan(); setPlans(getPlans().sort((a, b) => b.updatedAt - a.updatedAt)); }}>
+            Adicionar minha ficha (Seg a Sáb)
+          </button>
+        )}
         {plans.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <ClipboardIcon size={40} style={{ color: '#525259', margin: '0 auto 16px' }} />

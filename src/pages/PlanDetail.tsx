@@ -239,6 +239,15 @@ export default function PlanDetail({ planId, onNavigate }: Props) {
               <button className="icon-btn" onClick={() => updatePlan({ days: plan.days.filter(d => d.id !== day.id) })} aria-label="Remover dia"><TrashIcon size={18} /></button>
             </div>
 
+            <select
+              className="field" style={{ marginBottom: 10 }} aria-label="Dia da semana"
+              value={day.weekday ?? ''}
+              onChange={e => mapDay(day.id, d => ({ ...d, weekday: e.target.value === '' ? undefined : Number(e.target.value) }))}
+            >
+              <option value="">Dia da semana: não definido</option>
+              {['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'].map((n, i) => <option key={n} value={i}>{n}</option>)}
+            </select>
+
             {day.exercises.map((pe, i) => (
               <ExerciseRow
                 key={pe.id} pe={pe} index={i} total={day.exercises.length} siblings={day.exercises}
