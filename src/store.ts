@@ -1,3 +1,4 @@
+import { STARTER_EXERCISES } from './data/starterExercises';
 import type { Exercise, WorkoutPlan, WorkoutSession, BodyMeasurement, UserPrefs } from './types';
 
 const KEYS = {
@@ -138,4 +139,66 @@ export function getPRForExercise(exerciseId: string): number {
     }
   }
   return pr;
+}
+
+export function deleteSession(id: string): void {
+  write(KEYS.sessions, getSessions().filter(s => s.id !== id));
+}
+
+export function addStarterExercises(): number {
+  const have = new Set(getExercises().map(e => e.name.toLowerCase()));
+  const now = Date.now();
+  const fresh = STARTER_EXERCISES.filter(e => !have.has(e.name.toLowerCase())).map((e, i) => ({
+    id: `${uid()}-${i}`,
+    name: e.name,
+    muscleGroup: e.muscleGroup,
+    secondaryMuscles: [],
+    equipment: e.equipment,
+    notes: '',
+    createdAt: now + i,
+  }));
+  write(KEYS.exercises, [...getExercises(), ...fresh]);
+  return fresh.length;
+}
+
+export function getLastPerformance(exerciseId: string, excludeSessionId?: string) {
+  for (const session of getSessions()) {
+    if (session.finishedAt == null || session.id === excludeSessionId) continue;
+    const log = session.exercises.find(l => l.exerciseId === exerciseId && l.sets.some(s => s.done));
+    if (log) return { date: session.startedAt, sets: log.sets.filter(s => s.done) };
+  }
+  return undefined;
+}
+
+export function estimate1RM(weight: number, reps: number): number {
+  if (weight <= 0 || reps <= 0) return 0;
+  return reps === 1 ? weight : weight * (1 + reps / 30);
+}
+
+export function getExerciseRecords(exerciseId: string, excludeSessionId?: string) {
+  let maxWeight = 0, maxWeightDate = 0, best1RM = 0, maxVolume = 0;
+  for (const session of getSessions()) {
+    if (session.finishedAt == null || session.id === excludeSessionId) continue;
+    for (const log of session.exercises) {
+      if (log.exerciseId !== exerciseId) continue;
+      let vol = 0;
+      for (const set of log.sets) {
+        if (!set.done) continue;
+        vol += set.weight * set.reps;
+        if (set.weight > maxWeight) { maxWeight = set.weight; maxWeightDate = session.startedAt; }
+        best1RM = Math.max(best1RM, estimate1RM(set.weight, set.reps));
+      }
+      maxVolume = Math.max(maxVolume, vol);
+    }
+  }
+  return { maxWeight, maxWeightDate, best1RM, maxVolume };
+}
+
+export function suggestNextDay(planId: string): string | undefined {
+  const plan = getPlan(planId);
+  if (!plan || plan.days.length === 0) return undefined;
+  const last = getSessions().find(s => s.planId === planId && s.finishedAt != null);
+  if (!last) return plan.days[0].id;
+  const idx = plan.days.findIndex(d => d.id === last.dayId);
+  return plan.days[(idx + 1) % plan.days.length].id;
 }

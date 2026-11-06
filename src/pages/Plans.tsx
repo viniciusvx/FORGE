@@ -1,58 +1,73 @@
-import React from 'react';
-import type { View } from '../types';
-import { getPlans } from '../store';
-import { PlusIcon, ChevronRightIcon, ClipboardIcon } from '../components/Icons';
+import React, { useState } from 'react';
+import type { View, WorkoutPlan } from '../types';
+import { getPlans, savePlan, suggestNextDay, uid } from '../store';
+import { PlusIcon, ClipboardIcon, ChevronRightIcon, CopyIcon, PlayIcon } from '../components/Icons';
 
 interface Props { onNavigate: (v: View) => void; }
 
 export default function Plans({ onNavigate }: Props) {
-  const plans = getPlans().sort((a, b) => b.updatedAt - a.updatedAt);
+  const [plans, setPlans] = useState(() => getPlans().sort((a, b) => b.updatedAt - a.updatedAt));
+
+  function duplicate(plan: WorkoutPlan) {
+    const copy: WorkoutPlan = {
+      ...plan, id: uid(), name: `${plan.name} (cópia)`, createdAt: Date.now(), updatedAt: Date.now(),
+      days: plan.days.map(d => {
+        const idMap = new Map<string, string>();
+        const exercises = d.exercises.map(e => { const id = uid(); idMap.set(e.id, id); return { ...e, id }; })
+          .map(e => ({ ...e, biSetWithId: e.biSetWithId ? idMap.get(e.biSetWithId) : undefined }));
+        return { ...d, id: uid(), exercises };
+      }),
+    };
+    savePlan(copy);
+    setPlans(getPlans().sort((a, b) => b.updatedAt - a.updatedAt));
+  }
 
   return (
     <div className="page animate-fade-in">
-      <div className="page-inner">
-        <div className="page-header">
-          <div style={{ flex: 1 }}>
-            <div className="label-xs" style={{ marginBottom: 4 }}>Treinos</div>
-            <h1 className="page-title">Fichas</h1>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => onNavigate({ screen: 'plan-new' })}>
-            <PlusIcon size={16} />
-            Nova
-          </button>
+      <div className="page-header">
+        <div style={{ flex: 1 }}>
+          <div className="label-xs" style={{ marginBottom: 4 }}>Treinos</div>
+          <h1 className="page-title">Fichas</h1>
         </div>
+        <button className="btn btn-primary btn-sm" onClick={() => onNavigate({ screen: 'plan-new' })}><PlusIcon size={16} /> Nova</button>
+      </div>
 
+      <div className="page-inner">
         {plans.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <ClipboardIcon size={40} style={{ color: '#525259', margin: '0 auto 16px' } as React.CSSProperties} />
+            <ClipboardIcon size={40} style={{ color: '#525259', margin: '0 auto 16px' }} />
             <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 8 }}>Nenhuma ficha criada</div>
-            <div style={{ fontSize: 13, color: '#525259', marginBottom: 24 }}>Monte sua ficha com divisão A/B/C e exercícios.</div>
-            <button className="btn btn-primary" onClick={() => onNavigate({ screen: 'plan-new' })}>
-              <PlusIcon size={16} />
-              Criar ficha
-            </button>
+            <div style={{ fontSize: 13, color: '#6b6b73', marginBottom: 24 }}>Monte sua ficha com divisão A/B/C e exercícios.</div>
+            <button className="btn btn-primary" onClick={() => onNavigate({ screen: 'plan-new' })}><PlusIcon size={16} /> Criar ficha</button>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {plans.map(plan => (
-              <button
-                key={plan.id}
-                className="card"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', textAlign: 'left', width: '100%' }}
-                onClick={() => onNavigate({ screen: 'plan-detail', planId: plan.id })}
-              >
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 16, fontWeight: 500 }}>{plan.name}</div>
-                  {plan.goal && <div style={{ fontSize: 13, color: '#525259', marginTop: 2 }}>{plan.goal}</div>}
-                  <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                    {plan.days.map(day => (
-                      <span key={day.id} className="badge badge-muted">{day.label}</span>
-                    ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {plans.map(plan => {
+              const next = suggestNextDay(plan.id);
+              return (
+                <div key={plan.id} className="card">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button style={{ flex: 1, textAlign: 'left', minWidth: 0 }} onClick={() => onNavigate({ screen: 'plan-detail', planId: plan.id })}>
+                      <div style={{ fontSize: 16, fontWeight: 500 }}>{plan.name}</div>
+                      {plan.goal && <div style={{ fontSize: 13, color: '#6b6b73', marginTop: 2 }}>{plan.goal}</div>}
+                    </button>
+                    <button className="icon-btn" onClick={() => duplicate(plan)} aria-label="Duplicar ficha"><CopyIcon size={18} /></button>
+                    <button className="icon-btn" onClick={() => onNavigate({ screen: 'plan-detail', planId: plan.id })} aria-label="Editar ficha"><ChevronRightIcon size={18} /></button>
                   </div>
+                  {plan.days.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+                      {plan.days.map(day => (
+                        <button key={day.id} className={`chip ${next === day.id ? 'on' : ''}`} disabled={day.exercises.length === 0}
+                          style={{ opacity: day.exercises.length === 0 ? 0.4 : 1 }}
+                          onClick={() => onNavigate({ screen: 'workout', planId: plan.id, dayId: day.id })}>
+                          <PlayIcon size={12} />&nbsp;{day.label} · {day.exercises.length}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <ChevronRightIcon size={18} style={{ color: '#525259', flexShrink: 0, marginLeft: 8 } as React.CSSProperties} />
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

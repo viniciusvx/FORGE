@@ -46,14 +46,14 @@ export default function Settings({ onNavigate }: Props) {
 
   return (
     <div className="page animate-fade-in">
-      <div className="page-inner">
-        <div className="page-header">
-          <div>
-            <div className="label-xs" style={{ marginBottom: 4 }}>Preferências</div>
-            <h1 className="page-title">Configurações</h1>
-          </div>
-          {saved && <span className="badge badge-success">Salvo</span>}
+      <div className="page-header">
+        <div style={{ flex: 1 }}>
+          <div className="label-xs" style={{ marginBottom: 4 }}>Preferências</div>
+          <h1 className="page-title">Configurações</h1>
         </div>
+        {saved && <span className="badge badge-success">Salvo</span>}
+      </div>
+      <div className="page-inner">
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
@@ -65,8 +65,7 @@ export default function Settings({ onNavigate }: Props) {
                   {(['kg', 'lb'] as const).map(unit => (
                     <button
                       key={unit}
-                      className={`badge ${prefs.weightUnit === unit ? 'badge-amber' : 'badge-muted'}`}
-                      style={{ cursor: 'pointer' }}
+                      className={`chip ${prefs.weightUnit === unit ? 'on' : ''}`}
                       onClick={() => update('weightUnit', unit)}
                     >
                       {unit}
@@ -85,11 +84,11 @@ export default function Settings({ onNavigate }: Props) {
                 <input
                   type="number"
                   className="field"
-                  style={{ width: 80, padding: '6px 10px', textAlign: 'center' }}
+                  style={{ width: 90, textAlign: 'center' }}
                   value={prefs.restTimerDefault}
                   min={0}
                   max={600}
-                  onChange={e => update('restTimerDefault', parseInt(e.target.value) || 60)}
+                  onChange={e => update('restTimerDefault', e.target.value === '' ? 0 : Math.min(600, parseInt(e.target.value) || 0))}
                 />
               </label>
             </div>

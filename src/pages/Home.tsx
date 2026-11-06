@@ -1,6 +1,6 @@
 import React from 'react';
 import type { View } from '../types';
-import { getPlans, getSessions, getActiveSession } from '../store';
+import { getPlans, getSessions, getActiveSession, suggestNextDay } from '../store';
 import { DumbbellIcon, ClipboardIcon, TrendingUpIcon, ZapIcon } from '../components/Icons';
 
 interface Props { onNavigate: (v: View) => void; }
@@ -31,13 +31,13 @@ export default function Home({ onNavigate }: Props) {
 
   return (
     <div className="page animate-fade-in">
-      <div className="page-inner">
-        <div className="page-header" style={{ paddingBottom: 24 }}>
-          <div>
-            <div className="label-xs" style={{ marginBottom: 4 }}>FORGE</div>
-            <h1 className="page-title">Bom treino.</h1>
-          </div>
+      <div className="page-header" style={{ paddingBottom: 20 }}>
+        <div>
+          <div className="label-xs" style={{ marginBottom: 4 }}>FORGE</div>
+          <h1 className="page-title">Bom treino.</h1>
         </div>
+      </div>
+      <div className="page-inner">
 
         {activeSession && (
           <div
@@ -72,20 +72,33 @@ export default function Home({ onNavigate }: Props) {
                 </div>
               ))}
             </div>
-            <button className="btn btn-primary btn-full" style={{ marginTop: 12 }} onClick={() => onNavigate({ screen: 'workout' })}>
-              <DumbbellIcon size={18} />
-              Iniciar treino
-            </button>
+            {(() => {
+              const plan = plans[0];
+              const nextId = suggestNextDay(plan.id);
+              const nextDay = plan.days.find(d => d.id === nextId);
+              return nextDay && nextDay.exercises.length > 0 ? (
+                <button className="btn btn-primary btn-full btn-lg" style={{ marginTop: 12 }}
+                  onClick={() => onNavigate({ screen: 'workout', planId: plan.id, dayId: nextDay.id })}>
+                  <DumbbellIcon size={18} />
+                  Treinar {nextDay.label} · {plan.name}
+                </button>
+              ) : null;
+            })()}
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => onNavigate({ screen: 'workout' })}>Outro treino</button>
+              <button className="btn btn-ghost" style={{ flex: 1 }} onClick={() => onNavigate({ screen: 'workout' })}>Treino livre</button>
+            </div>
           </div>
         ) : (
           <div style={{ marginBottom: 24 }}>
             <div className="card" style={{ textAlign: 'center', padding: 32 }}>
-              <ClipboardIcon size={32} style={{ color: '#525259', margin: '0 auto 12px' } as React.CSSProperties} />
+              <ClipboardIcon size={32} style={{ color: '#525259', margin: '0 auto 12px' }} />
               <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>Sem fichas ainda</div>
-              <div style={{ fontSize: 13, color: '#525259', marginBottom: 16 }}>Crie sua primeira ficha de treino para começar.</div>
-              <button className="btn btn-primary" onClick={() => onNavigate({ screen: 'plan-new' })}>
-                Criar ficha
-              </button>
+              <div style={{ fontSize: 13, color: '#525259', marginBottom: 16 }}>Crie uma ficha ou comece um treino livre agora.</div>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                <button className="btn btn-primary" onClick={() => onNavigate({ screen: 'plan-new' })}>Criar ficha</button>
+                <button className="btn btn-ghost" onClick={() => onNavigate({ screen: 'workout' })}>Treino livre</button>
+              </div>
             </div>
           </div>
         )}

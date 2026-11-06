@@ -42,7 +42,7 @@ export default function App() {
   function renderPage() {
     switch (view.screen) {
       case 'home': return <Home onNavigate={setView} />;
-      case 'workout': return <WorkoutMode onNavigate={setView} />;
+      case 'workout': return <WorkoutMode key={`${view.planId}-${view.dayId}`} planId={view.planId} dayId={view.dayId} onNavigate={setView} />;
       case 'plans': return <Plans onNavigate={setView} />;
       case 'plan-detail': return <PlanDetail planId={view.planId} onNavigate={setView} />;
       case 'plan-new': return <PlanDetail planId={null} onNavigate={setView} />;
@@ -62,7 +62,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100dvh' }}>
       {renderPage()}
-      <Nav view={view} onNavigate={setView} />
+      {view.screen !== 'workout' && <Nav view={view} onNavigate={setView} />}
     </div>
   );
 }

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { View } from '../types';
-import { getSession, getExercise } from '../store';
-import { ChevronLeftIcon } from '../components/Icons';
+import { getSession, getExercise, getPlan, deleteSession } from '../store';
+import { ChevronLeftIcon, TrashIcon, RepeatIcon } from '../components/Icons';
+import { ConfirmSheet } from '../components/Sheet';
 
 interface Props {
   sessionId: string;
@@ -17,15 +18,14 @@ function fmt(sec: number) {
 
 export default function SessionDetail({ sessionId, onNavigate }: Props) {
   const session = getSession(sessionId);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   if (!session) {
     return (
       <div className="page">
-        <div className="page-inner">
-          <button onClick={() => onNavigate({ screen: 'history' })} style={{ color: '#525259', padding: '56px 0 20px', display: 'block' }}>
-            <ChevronLeftIcon size={22} />
-          </button>
-          <p style={{ color: '#525259' }}>Sessão não encontrada.</p>
+        <div className="page-header">
+          <button className="icon-btn" onClick={() => onNavigate({ screen: 'history' })}><ChevronLeftIcon size={22} /></button>
         </div>
+        <div className="page-inner"><p style={{ color: '#6b6b73' }}>Sessão não encontrada.</p></div>
       </div>
     );
   }
@@ -35,17 +35,23 @@ export default function SessionDetail({ sessionId, onNavigate }: Props) {
   return (
     <div className="page animate-fade-in">
       <div className="page-inner">
-        <div className="page-header">
-          <button onClick={() => onNavigate({ screen: 'history' })} style={{ color: '#525259' }}>
-            <ChevronLeftIcon size={22} />
-          </button>
-          <div style={{ flex: 1 }}>
+        <div className="page-header" style={{ padding: 0, paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)', paddingBottom: 18 }}>
+          <button className="icon-btn" onClick={() => onNavigate({ screen: 'history' })} aria-label="Voltar"><ChevronLeftIcon size={22} /></button>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <div className="label-xs" style={{ marginBottom: 4 }}>
               {date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
             </div>
             <h1 className="page-title">{session.planName} · {session.dayLabel}</h1>
           </div>
+          <button className="icon-btn" style={{ color: '#E05555' }} onClick={() => setConfirmDelete(true)} aria-label="Excluir treino"><TrashIcon size={20} /></button>
         </div>
+
+        {session.prs && session.prs.length > 0 && (
+          <div className="card" style={{ marginBottom: 16, background: 'rgba(200,169,110,0.08)', border: '1px solid rgba(200,169,110,0.25)' }}>
+            <div className="label-xs" style={{ color: '#C8A96E', marginBottom: 6 }}>Novo recorde de carga</div>
+            <div style={{ fontSize: 14 }}>{session.prs.map(id => getExercise(id)?.name).filter(Boolean).join(', ')}</div>
+          </div>
+        )}
 
         <div className="card" style={{ display: 'flex', gap: 24, marginBottom: 24 }}>
           <div>
@@ -79,7 +85,7 @@ export default function SessionDetail({ sessionId, onNavigate }: Props) {
             return (
               <div key={i} className="card">
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <div style={{ fontSize: 15, fontWeight: 600 }}>{ex?.name ?? 'Exercício removido'}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600 }}>{ex?.name ?? 'Exercício removido'}{session.prs?.includes(log.exerciseId) && <span className="badge badge-amber" style={{ marginLeft: 8 }}>recorde</span>}</div>
                   <div className="badge badge-muted">{doneSets.length} séries</div>
                 </div>
 
@@ -114,7 +120,25 @@ export default function SessionDetail({ sessionId, onNavigate }: Props) {
             );
           })}
         </div>
+
+        {session.notes && (
+          <div className="card" style={{ marginTop: 16 }}>
+            <div className="label-xs" style={{ marginBottom: 6 }}>Observações</div>
+            <div style={{ fontSize: 14, lineHeight: 1.5 }}>{session.notes}</div>
+          </div>
+        )}
+
+        {session.planId !== 'free' && getPlan(session.planId)?.days.some(d => d.id === session.dayId) && (
+          <button className="btn btn-primary btn-full" style={{ marginTop: 20 }} onClick={() => onNavigate({ screen: 'workout', planId: session.planId, dayId: session.dayId })}>
+            <RepeatIcon size={16} /> Repetir este treino
+          </button>
+        )}
       </div>
+
+      {confirmDelete && (
+        <ConfirmSheet title="Excluir este treino?" message="Ele sai do histórico, dos recordes e do mapa muscular. Não dá para desfazer."
+          confirmLabel="Excluir" onConfirm={() => { deleteSession(session.id); onNavigate({ screen: 'history' }); }} onCancel={() => setConfirmDelete(false)} />
+      )}
     </div>
   );
 }

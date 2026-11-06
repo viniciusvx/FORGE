@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import type { View, BodyMeasurement } from '../types';
 import { getMeasurements, saveMeasurement, deleteMeasurement, uid, getPrefs } from '../store';
-import { PlusIcon, ChevronLeftIcon, XIcon } from '../components/Icons';
+import { PlusIcon, XIcon } from '../components/Icons';
+import Sheet from '../components/Sheet';
 
 interface Props { onNavigate: (v: View) => void; }
 
@@ -46,43 +47,29 @@ function AddSheet({ onSave, onClose }: AddSheetProps) {
   ];
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/60" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up"
-        style={{ background: '#16161C', borderRadius: '14px 14px 0 0', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))', maxHeight: '85dvh', overflowY: 'auto' }}>
-        <div style={{ padding: '20px 20px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontSize: 16, fontWeight: 500 }}>Nova medição</div>
-          <button onClick={onClose} style={{ color: '#525259' }}><XIcon size={20} /></button>
+    <Sheet title="Nova medição" onClose={onClose}
+      footer={<button className="btn btn-primary btn-full" onClick={handleSave}>Salvar medição</button>}>
+      <div style={{ padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div>
+          <label className="label-xs" style={{ display: 'block', marginBottom: 6 }}>Data</label>
+          <input type="date" className="field" value={dateStr} onChange={e => setDateStr(e.target.value)} />
         </div>
-        <div style={{ padding: '0 20px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div>
-            <label className="label-xs" style={{ display: 'block', marginBottom: 6 }}>Data</label>
-            <input type="date" className="field" value={dateStr} onChange={e => setDateStr(e.target.value)} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {fields.map(({ key, label }) => (
-              <div key={key}>
-                <label className="label-xs" style={{ display: 'block', marginBottom: 4 }}>{label}</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  className="field"
-                  style={{ padding: '8px 10px' }}
-                  placeholder="—"
-                  value={(m[key] as number | undefined) ?? ''}
-                  onChange={e => patch(key, e.target.value === '' ? undefined : parseFloat(e.target.value))}
-                />
-              </div>
-            ))}
-          </div>
-          <div>
-            <label className="label-xs" style={{ display: 'block', marginBottom: 4 }}>Notas</label>
-            <input className="field" placeholder="Observações..." value={m.notes} onChange={e => patch('notes', e.target.value)} />
-          </div>
-          <button className="btn btn-primary btn-full" onClick={handleSave}>Salvar medição</button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {fields.map(({ key, label }) => (
+            <div key={key}>
+              <label className="label-xs" style={{ display: 'block', marginBottom: 4 }}>{label}</label>
+              <input type="number" inputMode="decimal" className="field" placeholder="—"
+                value={(m[key] as number | undefined) ?? ''}
+                onChange={e => patch(key, e.target.value === '' ? undefined : parseFloat(e.target.value))} />
+            </div>
+          ))}
+        </div>
+        <div>
+          <label className="label-xs" style={{ display: 'block', marginBottom: 4 }}>Notas</label>
+          <input className="field" placeholder="Observações..." value={m.notes} onChange={e => patch('notes', e.target.value)} />
         </div>
       </div>
-    </>
+    </Sheet>
   );
 }
 
@@ -114,16 +101,16 @@ export default function Body({ onNavigate }: Props) {
 
   return (
     <div className="page animate-fade-in">
-      <div className="page-inner">
-        <div className="page-header">
-          <div style={{ flex: 1 }}>
-            <div className="label-xs" style={{ marginBottom: 4 }}>Corpo</div>
-            <h1 className="page-title">Medidas</h1>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => setShowAdd(true)}>
-            <PlusIcon size={16} /> Nova
-          </button>
+      <div className="page-header">
+        <div style={{ flex: 1 }}>
+          <div className="label-xs" style={{ marginBottom: 4 }}>Corpo</div>
+          <h1 className="page-title">Medidas</h1>
         </div>
+        <button className="btn btn-primary btn-sm" onClick={() => setShowAdd(true)}>
+          <PlusIcon size={16} /> Nova
+        </button>
+      </div>
+      <div className="page-inner">
 
         {measurements.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
@@ -155,7 +142,7 @@ export default function Body({ onNavigate }: Props) {
               <div key={m.id} className="card" style={{ marginBottom: 8, position: 'relative' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div className="label-xs">{new Date(m.date).toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
-                  <button style={{ color: '#525259' }} onClick={() => handleDelete(m.id)}><XIcon size={16} /></button>
+                  <button className="icon-btn" style={{ width: 32, height: 32, marginTop: -6, marginRight: -6 }} onClick={() => handleDelete(m.id)} aria-label="Excluir medição"><XIcon size={16} /></button>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 16px', marginTop: 8 }}>
                   {m.weight != null && <span style={{ fontSize: 13 }}>{m.weight}{m.weightUnit}</span>}
@@ -163,6 +150,10 @@ export default function Body({ onNavigate }: Props) {
                   {m.chest != null && <span style={{ fontSize: 13, color: '#525259' }}>Peit {m.chest}cm</span>}
                   {m.waist != null && <span style={{ fontSize: 13, color: '#525259' }}>Cin {m.waist}cm</span>}
                   {m.hips != null && <span style={{ fontSize: 13, color: '#525259' }}>Quad {m.hips}cm</span>}
+                  {m.leftArm != null && <span style={{ fontSize: 13, color: '#525259' }}>Braço E {m.leftArm}cm</span>}
+                  {m.rightArm != null && <span style={{ fontSize: 13, color: '#525259' }}>Braço D {m.rightArm}cm</span>}
+                  {m.leftThigh != null && <span style={{ fontSize: 13, color: '#525259' }}>Coxa E {m.leftThigh}cm</span>}
+                  {m.rightThigh != null && <span style={{ fontSize: 13, color: '#525259' }}>Coxa D {m.rightThigh}cm</span>}
                 </div>
                 {m.notes && <div style={{ fontSize: 12, color: '#525259', marginTop: 6 }}>{m.notes}</div>}
               </div>

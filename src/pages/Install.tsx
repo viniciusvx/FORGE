@@ -7,13 +7,13 @@ interface Props { onNavigate: (v: View) => void; }
 export default function Install({ onNavigate }: Props) {
   return (
     <div className="page animate-fade-in">
-      <div className="page-inner">
-        <div className="page-header">
-          <div>
-            <div className="label-xs" style={{ marginBottom: 4 }}>PWA</div>
-            <h1 className="page-title">Instalar no celular</h1>
-          </div>
+      <div className="page-header">
+        <div>
+          <div className="label-xs" style={{ marginBottom: 4 }}>PWA</div>
+          <h1 className="page-title">Instalar no celular</h1>
         </div>
+      </div>
+      <div className="page-inner">
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div className="card">

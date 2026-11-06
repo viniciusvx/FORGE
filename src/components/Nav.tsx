@@ -47,13 +47,13 @@ function MenuDrawer({ view, onNavigate, onClose }: MenuDrawerProps) {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60"
-        style={{ backdropFilter: 'blur(2px)' }}
+        className="fixed inset-0 bg-black/60"
+        style={{ zIndex: 110, backdropFilter: 'blur(2px)' }}
         onClick={onClose}
       />
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl animate-slide-up"
-        style={{ background: '#16161C', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))', maxHeight: '80dvh', overflowY: 'auto' }}
+        className="fixed bottom-0 left-0 right-0 rounded-t-2xl animate-slide-up"
+        style={{ zIndex: 111, background: '#16161C', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))', maxHeight: '80dvh', overflowY: 'auto' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 20px 8px' }}>
           <span style={{ fontFamily: "'Fraunces', serif", fontSize: 20, fontWeight: 300, color: '#EFEDE7' }}>Menu</span>

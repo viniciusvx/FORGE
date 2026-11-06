@@ -68,6 +68,7 @@ export interface WorkoutSession {
   durationSeconds?: number;
   exercises: ExerciseLog[];
   notes: string;
+  prs?: string[];
 }
 
 export interface BodyMeasurement {
@@ -95,7 +96,7 @@ export interface UserPrefs {
 
 export type View =
   | { screen: 'home' }
-  | { screen: 'workout' }
+  | { screen: 'workout'; planId?: string; dayId?: string }
   | { screen: 'plans' }
   | { screen: 'plan-detail'; planId: string }
   | { screen: 'plan-new' }

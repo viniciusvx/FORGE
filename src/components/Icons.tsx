@@ -25,7 +25,7 @@ const icon = (path: string, viewBox = '0 0 24 24') =>
   );
 
 export const HomeIcon = icon('M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z|M9 22V12h6v10');
-export const DumbbellIcon = icon('M6.5 6.5L17.5 17.5|M5 7.5L7.5 5|M16.5 18.5L19 16|M2 10l3-3 7 7-3 3-7-7z|M12 2l3 3-7 7-3-3 7-7z');
+export const DumbbellIcon = icon('M6.5 6.5v11|M3.5 9v6|M17.5 6.5v11|M20.5 9v6|M6.5 12h11');
 export const ClipboardIcon = icon('M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2|M9 5a2 2 0 000 4h6a2 2 0 000-4|M9 5a2 2 0 012-2h2a2 2 0 012 2');
 export const TrendingUpIcon = icon('M23 6l-9.5 9.5-5-5L1 18|M17 6h6v6');
 export const MenuIcon = icon('M3 12h18|M3 6h18|M3 18h18');
@@ -52,3 +52,5 @@ export const DownloadIcon = icon('M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4|M7 10l
 export const InfoIcon = icon('M12 22a10 10 0 100-20 10 10 0 000 20z|M12 8h.01|M11 12h1v4h1');
 export const RepeatIcon = icon('M17 1l4 4-4 4|M3 11V9a4 4 0 014-4h14|M7 23l-4-4 4-4|M21 13v2a4 4 0 01-4 4H3');
 export const ZapIcon = icon('M13 2L3 14h9l-1 8 10-12h-9l1-8z');
+export const CopyIcon = icon('M9 9h11v11H9z|M5 15V4h11');
+export const ChevronUpIcon = icon('M18 15l-6-6-6 6');
