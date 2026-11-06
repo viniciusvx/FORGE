@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import type { View, MuscleGroup } from '../types';
 import { MUSCLE_LABELS, EQUIPMENT_LABELS } from '../types';
-import { getExercises, addStarterExercises } from '../store';
+import { getExercises, addStarterExercises, addRoutineExercises } from '../store';
 import { PlusIcon, SearchIcon, ChevronRightIcon } from '../components/Icons';
 
 interface Props { onNavigate: (v: View) => void; }
@@ -47,6 +47,12 @@ export default function Exercises({ onNavigate }: Props) {
           </div>
         </div>
 
+        {all.length > 0 && (
+          <button className="btn btn-ghost btn-sm btn-full" style={{ marginBottom: 12 }} onClick={() => { addRoutineExercises(); force(n => n + 1); }}>
+            Adicionar minha rotina com análise muscular
+          </button>
+        )}
+
         {usedMuscles.length > 0 && (
           <div className="chips">
             <button className={`chip ${filterMuscle === 'all' ? 'on' : ''}`} onClick={() => setFilterMuscle('all')}>Todos</button>
@@ -66,6 +72,9 @@ export default function Exercises({ onNavigate }: Props) {
                   <button className="btn btn-primary" onClick={() => onNavigate({ screen: 'exercise-new' })}>
                     <PlusIcon size={16} />
                     Adicionar exercício
+                  </button>
+                  <button className="btn btn-outline" onClick={() => { addRoutineExercises(); force(n => n + 1); }}>
+                    Carregar minha rotina (com análise muscular)
                   </button>
                   <button className="btn btn-ghost" onClick={() => { addStarterExercises(); force(n => n + 1); }}>
                     Carregar exercícios básicos

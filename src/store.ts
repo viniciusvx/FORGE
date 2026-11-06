@@ -1,4 +1,5 @@
 import { STARTER_EXERCISES } from './data/starterExercises';
+import { ANATOMY_EXERCISES, resolveAnatomy } from './anatomy/data';
 import type { Exercise, WorkoutPlan, WorkoutSession, BodyMeasurement, UserPrefs } from './types';
 
 const KEYS = {
@@ -201,4 +202,21 @@ export function suggestNextDay(planId: string): string | undefined {
   if (!last) return plan.days[0].id;
   const idx = plan.days.findIndex(d => d.id === last.dayId);
   return plan.days[(idx + 1) % plan.days.length].id;
+}
+
+export function addRoutineExercises(): number {
+  const existing = getExercises();
+  const now = Date.now();
+  const fresh = ANATOMY_EXERCISES.filter(a => !a.pending && !existing.some(e => resolveAnatomy(e)?.key === a.key)).map((a, i) => ({
+    id: `${uid()}-r${i}`,
+    name: a.name,
+    muscleGroup: a.group,
+    secondaryMuscles: [],
+    equipment: a.equipment,
+    notes: '',
+    createdAt: now + i,
+    mapKey: a.key,
+  }));
+  write(KEYS.exercises, [...existing, ...fresh]);
+  return fresh.length;
 }

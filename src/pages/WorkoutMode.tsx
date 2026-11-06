@@ -5,9 +5,10 @@ import {
   getPlans, getPlan, getExercise, getActiveSession, saveActiveSession, saveSession,
   getLastSessionForDay, getLastPerformance, getExerciseRecords, suggestNextDay, uid, getPrefs,
 } from '../store';
-import { ChevronLeftIcon, CheckIcon, TimerIcon, PlusIcon, XIcon, StopIcon, ChevronRightIcon, DumbbellIcon } from '../components/Icons';
+import { ChevronLeftIcon, CheckIcon, TimerIcon, PlusIcon, XIcon, StopIcon, ChevronRightIcon, DumbbellIcon, BodyIcon } from '../components/Icons';
 import Sheet from '../components/Sheet';
 import ExercisePicker from '../components/ExercisePicker';
+import { MuscleSheet } from '../components/ExerciseAnatomy';
 
 interface Props {
   planId?: string;
@@ -225,6 +226,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
   const [timer, setTimer] = useState<{ key: number; seconds: number } | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [confirmFinish, setConfirmFinish] = useState(false);
+  const [musclesFor, setMusclesFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -421,7 +423,10 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
                     {partner && ` com ${getExercise(partner.exerciseId)?.name}`}
                   </div>
                 </div>
-                <button className="icon-btn" style={{ width: 32, height: 32 }} onClick={() => removeExercise(ei)} aria-label="Remover exercício"><XIcon size={16} /></button>
+                <div style={{ display: 'flex', flexShrink: 0 }}>
+                  <button className="icon-btn" style={{ width: 36, height: 36 }} onClick={() => setMusclesFor(log.exerciseId)} aria-label="Ver músculos"><BodyIcon size={18} /></button>
+                  <button className="icon-btn" style={{ width: 36, height: 36 }} onClick={() => removeExercise(ei)} aria-label="Remover exercício"><XIcon size={16} /></button>
+                </div>
               </div>
 
               {(last || record.maxWeight > 0) && (
@@ -472,6 +477,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
         </button>
       </div>
 
+      {musclesFor && <MuscleSheet exerciseId={musclesFor} onClose={() => setMusclesFor(null)} />}
       {timer && <RestBar key={timer.key} seconds={timer.seconds} onClose={() => setTimer(null)} />}
       {showAddExercise && <ExercisePicker onAdd={addExerciseToSession} onClose={() => setShowAddExercise(false)} />}
 

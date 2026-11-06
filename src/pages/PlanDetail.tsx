@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { View, WorkoutPlan, PlanDay, PlannedExercise } from '../types';
 import { MUSCLE_LABELS } from '../types';
 import { getPlan, savePlan, deletePlan, getExercise, uid } from '../store';
-import { ChevronLeftIcon, PlusIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, CopyIcon, PlayIcon } from '../components/Icons';
+import { BodyIcon, ChevronLeftIcon, PlusIcon, TrashIcon, ChevronDownIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, CopyIcon, PlayIcon } from '../components/Icons';
 import ExercisePicker from '../components/ExercisePicker';
 import { ConfirmSheet } from '../components/Sheet';
+import { MuscleSheet } from '../components/ExerciseAnatomy';
 
 interface Props {
   planId: string | null;
@@ -38,6 +39,7 @@ interface ExerciseRowProps {
 
 function ExerciseRow({ pe, index, total, siblings, onChange, onRemove, onMove }: ExerciseRowProps) {
   const [expanded, setExpanded] = useState(false);
+  const [showMuscles, setShowMuscles] = useState(false);
   const ex = getExercise(pe.exerciseId);
   if (!ex) return null;
   const partner = pe.biSetWithId ? siblings.find(s => s.id === pe.biSetWithId) : undefined;
@@ -65,10 +67,13 @@ function ExerciseRow({ pe, index, total, siblings, onChange, onRemove, onMove }:
             {partnerName && ` com ${partnerName}`}
           </div>
         </button>
+        <button className="icon-btn" onClick={() => setShowMuscles(true)} aria-label="Ver músculos"><BodyIcon size={18} /></button>
         <button className="icon-btn" onClick={() => setExpanded(e => !e)} aria-label="Detalhes">
           {expanded ? <ChevronDownIcon size={18} /> : <ChevronRightIcon size={18} />}
         </button>
       </div>
+
+      {showMuscles && <MuscleSheet exerciseId={pe.exerciseId} onClose={() => setShowMuscles(false)} />}
 
       {expanded && (
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -122,8 +127,9 @@ function ExerciseRow({ pe, index, total, siblings, onChange, onRemove, onMove }:
 }
 
 export default function PlanDetail({ planId, onNavigate }: Props) {
-  const existing = planId ? getPlan(planId) : undefined;
-  const [plan, setPlan] = useState<WorkoutPlan>(existing ?? emptyPlan());
+  const initial = planId ? getPlan(planId) : undefined;
+  const [plan, setPlan] = useState<WorkoutPlan>(initial ?? emptyPlan());
+  const existing = getPlan(plan.id);
   const [pickerDayId, setPickerDayId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [savedFlash, setSavedFlash] = useState(false);

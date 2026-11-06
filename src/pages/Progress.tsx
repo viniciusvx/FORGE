@@ -3,11 +3,31 @@ import type { View, MuscleGroup, WorkoutSession } from '../types';
 import { MUSCLE_LABELS } from '../types';
 import { getSessions, getExercises, getExercise, getExerciseRecords } from '../store';
 import { TrendingUpIcon } from '../components/Icons';
-import MuscleMap from '../components/MuscleMap';
+import AnatomyFigure from '../components/AnatomyFigure';
+import { MUSCLES, resolveAnatomy } from '../anatomy/data';
+import type { MuscleId, View as BodyView } from '../anatomy/shapes';
 
 interface Props { onNavigate: (v: View) => void; }
 
 const DAY = 86400000;
+
+function regionHeat(sessions: WorkoutSession[]) {
+  const sets: Partial<Record<MuscleId, number>> = {};
+  let unmapped = 0;
+  const seen = new Set<string>();
+  for (const s of sessions) {
+    for (const log of s.exercises) {
+      const ex = getExercise(log.exerciseId);
+      const n = log.sets.filter(x => x.done).length;
+      if (!ex || n === 0) continue;
+      const a = resolveAnatomy(ex);
+      if (!a || a.pending) { if (!seen.has(ex.id)) { seen.add(ex.id); unmapped++; } continue; }
+      a.primary.forEach(id => { sets[id] = (sets[id] ?? 0) + n; });
+      a.secondary.forEach(id => { sets[id] = (sets[id] ?? 0) + n * 0.5; });
+    }
+  }
+  return { sets, unmapped };
+}
 
 function volumeByMuscle(sessions: WorkoutSession[]) {
   const sets: Partial<Record<MuscleGroup, number>> = {};
@@ -42,11 +62,16 @@ export default function Progress({ onNavigate }: Props) {
   const exercises = getExercises().sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
   const [selectedExId, setSelectedExId] = useState<string | null>(exercises[0]?.id ?? null);
   const [range, setRange] = useState<7 | 30>(7);
+  const [bodyView, setBodyView] = useState<BodyView>('front');
+  const [pickedRegion, setPickedRegion] = useState<MuscleId | null>(null);
 
   const week = sessions.filter(s => s.startedAt > Date.now() - 7 * DAY);
   const month = sessions.filter(s => s.startedAt > Date.now() - 30 * DAY);
   const { sets, last } = volumeByMuscle(sessions.filter(s => s.startedAt > Date.now() - range * DAY));
   const { last: lastAll } = volumeByMuscle(sessions);
+  const { sets: regionSets, unmapped } = regionHeat(sessions.filter(s => s.startedAt > Date.now() - range * DAY));
+  const maxRegion = Math.max(1, ...Object.values(regionSets).map(v => v ?? 0));
+  const heat = Object.fromEntries(Object.entries(regionSets).map(([k, v]) => [k, (v ?? 0) / maxRegion])) as Partial<Record<MuscleId, number>>;
   void last;
   const muscleRows = (Object.keys(MUSCLE_LABELS) as MuscleGroup[])
     .filter(m => m !== 'other' && (sets[m] || lastAll[m]))
@@ -96,7 +121,24 @@ export default function Progress({ onNavigate }: Props) {
                 </div>
               </div>
               <div className="card">
-                <MuscleMap sets={sets} />
+                <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                  <button className={`chip ${bodyView === 'front' ? 'on' : ''}`} onClick={() => setBodyView('front')}>Frente</button>
+                  <button className={`chip ${bodyView === 'back' ? 'on' : ''}`} onClick={() => setBodyView('back')}>Costas</button>
+                </div>
+                <div style={{ maxWidth: 300, margin: '0 auto' }}>
+                  <AnatomyFigure view={bodyView} layer="sup" heat={heat} zoom={false} selected={pickedRegion} onSelect={setPickedRegion} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', margin: '8px 0' }}>
+                  <span style={{ fontSize: 11, color: '#6b6b73' }}>menos</span>
+                  <div style={{ width: 90, height: 6, borderRadius: 3, background: 'linear-gradient(90deg, rgba(227,178,91,0.22), rgba(227,178,91,1))' }} />
+                  <span style={{ fontSize: 11, color: '#6b6b73' }}>mais séries</span>
+                </div>
+                <div style={{ fontSize: 12, color: '#8a8a92', textAlign: 'center', minHeight: 18 }}>
+                  {pickedRegion ? `${MUSCLES[pickedRegion].name}: ${Math.round((regionSets[pickedRegion] ?? 0) * 10) / 10} séries equivalentes` : 'Toque em um músculo para ver o volume.'}
+                </div>
+                <div style={{ fontSize: 11, color: '#6b6b73', marginTop: 6, lineHeight: 1.5 }}>
+                  Cada série conta 1 para o músculo principal e 0,5 para os que participam. {unmapped > 0 ? `${unmapped} exercício${unmapped > 1 ? 's' : ''} sem análise muscular não ${unmapped > 1 ? 'entram' : 'entra'} neste mapa.` : ''}
+                </div>
                 <div style={{ marginTop: 16 }}>
                   {muscleRows.map(m => {
                     const days = lastAll[m] ? Math.floor((Date.now() - lastAll[m]!) / DAY) : null;

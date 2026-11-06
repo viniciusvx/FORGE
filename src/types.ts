@@ -13,6 +13,7 @@ export interface Exercise {
   equipment: Equipment;
   notes: string;
   createdAt: number;
+  mapKey?: string;
 }
 
 export interface PlannedExercise {
@@ -108,7 +109,8 @@ export type View =
   | { screen: 'progress' }
   | { screen: 'body' }
   | { screen: 'settings' }
-  | { screen: 'install' };
+  | { screen: 'install' }
+  | { screen: 'anatomy'; exerciseKey?: string };
 
 export const MUSCLE_LABELS: Record<MuscleGroup, string> = {
   chest: 'Peito',

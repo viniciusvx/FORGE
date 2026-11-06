@@ -4,6 +4,7 @@ import { MUSCLE_LABELS, EQUIPMENT_LABELS } from '../types';
 import { getExercise, saveExercise, deleteExercise, getExerciseRecords, getSessions, uid } from '../store';
 import { ChevronLeftIcon, TrashIcon } from '../components/Icons';
 import { ConfirmSheet } from '../components/Sheet';
+import { ExerciseAnatomy } from '../components/ExerciseAnatomy';
 
 interface Props {
   exerciseId: string | null;
@@ -33,6 +34,7 @@ export default function ExerciseDetail({ exerciseId, onNavigate }: Props) {
       equipment,
       notes,
       createdAt: existing?.createdAt ?? Date.now(),
+      mapKey: existing?.mapKey,
     };
     saveExercise(ex);
     onNavigate({ screen: 'exercises' });
@@ -113,6 +115,13 @@ export default function ExerciseDetail({ exerciseId, onNavigate }: Props) {
             {isNew ? 'Criar exercício' : 'Salvar'}
           </button>
         </div>
+
+        {existing && (
+          <div style={{ marginTop: 28 }}>
+            <div className="label-xs" style={{ marginBottom: 10 }}>Análise muscular</div>
+            <ExerciseAnatomy exerciseId={existing.id} />
+          </div>
+        )}
 
         {existing && <ExerciseHistory exerciseId={existing.id} />}
       </div>
