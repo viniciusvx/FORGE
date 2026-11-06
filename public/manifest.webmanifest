@@ -1,0 +1,23 @@
+{
+  "name": "FORGE",
+  "short_name": "FORGE",
+  "description": "Seu aplicativo de musculação.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0A0A0D",
+  "theme_color": "#0A0A0D",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
