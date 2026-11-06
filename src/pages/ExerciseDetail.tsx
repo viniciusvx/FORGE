@@ -138,7 +138,7 @@ export default function ExerciseDetail({ exerciseId, onNavigate }: Props) {
 function ExerciseHistory({ exerciseId }: { exerciseId: string }) {
   const rec = getExerciseRecords(exerciseId);
   const logs = getSessions().filter(s => s.finishedAt != null).flatMap(s =>
-    s.exercises.filter(l => l.exerciseId === exerciseId && l.sets.some(x => x.done)).map(l => ({ s, l }))
+    s.exercises.filter(l => l.exerciseId === exerciseId && l.sets.some(x => x.done && !x.warmup)).map(l => ({ s, l }))
   ).slice(0, 6);
   if (logs.length === 0) return null;
   return (
@@ -151,7 +151,7 @@ function ExerciseHistory({ exerciseId }: { exerciseId: string }) {
       {logs.map(({ s, l }) => (
         <div key={s.id} style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div className="label-xs" style={{ marginBottom: 4 }}>{new Date(s.startedAt).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}</div>
-          <div style={{ fontSize: 13 }}>{l.sets.filter(x => x.done).map(x => `${x.weight}${x.unit}×${x.reps}`).join(' · ')}</div>
+          <div style={{ fontSize: 13 }}>{l.sets.filter(x => x.done && !x.warmup).map(x => `${x.weight}${x.unit}×${x.reps}`).join(' · ')}</div>
         </div>
       ))}
     </div>

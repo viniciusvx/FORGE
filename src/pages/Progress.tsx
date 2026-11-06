@@ -18,7 +18,7 @@ function regionHeat(sessions: WorkoutSession[]) {
   for (const s of sessions) {
     for (const log of s.exercises) {
       const ex = getExercise(log.exerciseId);
-      const n = log.sets.filter(x => x.done).length;
+      const n = log.sets.filter(x => x.done && !x.warmup).length;
       if (!ex || n === 0) continue;
       const a = resolveAnatomy(ex);
       if (!a || a.pending) { if (!seen.has(ex.id)) { seen.add(ex.id); unmapped++; } continue; }
@@ -36,7 +36,7 @@ function volumeByMuscle(sessions: WorkoutSession[]) {
     for (const log of s.exercises) {
       const ex = getExercise(log.exerciseId);
       if (!ex) continue;
-      const n = log.sets.filter(x => x.done).length;
+      const n = log.sets.filter(x => x.done && !x.warmup).length;
       if (n === 0) continue;
       sets[ex.muscleGroup] = (sets[ex.muscleGroup] ?? 0) + n;
       last[ex.muscleGroup] = Math.max(last[ex.muscleGroup] ?? 0, s.startedAt);
@@ -50,7 +50,7 @@ function progressFor(exerciseId: string, sessions: WorkoutSession[]) {
   for (const s of [...sessions].reverse()) {
     for (const log of s.exercises) {
       if (log.exerciseId !== exerciseId) continue;
-      const best = log.sets.filter(x => x.done && x.weight > 0).reduce((m, x) => Math.max(m, x.weight), 0);
+      const best = log.sets.filter(x => x.done && !x.warmup && x.weight > 0).reduce((m, x) => Math.max(m, x.weight), 0);
       if (best > 0) pts.push({ date: s.startedAt, weight: best });
     }
   }

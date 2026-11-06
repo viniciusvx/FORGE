@@ -143,19 +143,19 @@ function makeSets(count: number, exerciseId: string, unit: 'kg' | 'lb'): SetReco
 }
 
 interface SetRowProps {
-  idx: number;
+  label: string;
   set: SetRecord;
   prefs: ReturnType<typeof getPrefs>;
   onChange: (s: SetRecord) => void;
   onDone: () => void;
 }
 
-function SetRow({ idx, set, prefs, onChange, onDone }: SetRowProps) {
+function SetRow({ label, set, prefs, onChange, onDone }: SetRowProps) {
   const cols = 2 + (prefs.showRIR ? 1 : 0) + (prefs.showRPE ? 1 : 0);
   const num = (v: string, int: boolean) => (v === '' ? undefined : int ? parseInt(v) : parseFloat(v));
   return (
     <div className="set-row" style={{ ['--cols' as string]: cols, opacity: set.done ? 0.7 : 1 }}>
-      <div className="label-xs" style={{ textAlign: 'center' }}>{idx + 1}</div>
+      <div className="label-xs" style={{ textAlign: 'center', color: set.warmup ? '#5E9BC4' : '#4CAF7A' }}>{label}</div>
       <input type="number" className="set-input" inputMode="decimal" placeholder="0" value={set.weight || ''}
         onChange={e => onChange({ ...set, weight: num(e.target.value, false) ?? 0 })} aria-label="Carga" />
       <input type="number" className="set-input" inputMode="numeric" placeholder="0" value={set.reps || ''}
@@ -178,11 +178,10 @@ function SetRow({ idx, set, prefs, onChange, onDone }: SetRowProps) {
 
 function buildSession(plan: WorkoutPlan | null, day: PlanDay | null, unit: 'kg' | 'lb'): WorkoutSession {
   const exercises: ExerciseLog[] = day
-    ? day.exercises.map(pe => ({
-        plannedExerciseId: pe.id,
-        exerciseId: pe.exerciseId,
-        sets: makeSets(pe.sets, pe.exerciseId, unit),
-      }))
+    ? day.exercises.map(pe => {
+        const warm: SetRecord[] = Array.from({ length: pe.warmupSets ?? 0 }, () => ({ reps: 0, weight: 0, unit, done: false, warmup: true }));
+        return { plannedExerciseId: pe.id, exerciseId: pe.exerciseId, sets: [...warm, ...makeSets(pe.sets, pe.exerciseId, unit)] };
+      })
     : [];
   const prev = plan && day ? getLastSessionForDay(plan.id, day.id) : undefined;
   if (prev) {
@@ -276,7 +275,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
     const log = session.exercises[ei];
     const becoming = !log.sets[si].done;
     mapLog(ei, l => ({ ...l, sets: l.sets.map((s, i) => i === si ? { ...s, done: !s.done } : s) }));
-    if (becoming) {
+    if (becoming && !log.sets[si].warmup) {
       const plan = getPlan(session.planId);
       const pe = plan?.days.find(d => d.id === session.dayId)?.exercises.find(e => e.id === log.plannedExerciseId);
       const rest = pe?.restSeconds ?? prefs.restTimerDefault;
@@ -319,7 +318,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
       .map(l => ({ ...l, sets: l.sets.filter(s => s.done || s.weight > 0 || s.reps > 0) }))
       .filter(l => l.sets.length > 0);
     for (const log of cleaned) {
-      const best = log.sets.filter(s => s.done).reduce((m, s) => Math.max(m, s.weight), 0);
+      const best = log.sets.filter(s => s.done && !s.warmup).reduce((m, s) => Math.max(m, s.weight), 0);
       const before = getExerciseRecords(log.exerciseId, session.id);
       if (best > 0 && before.maxWeight > 0 && best > before.maxWeight) prs.push(log.exerciseId);
     }
@@ -395,6 +394,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
       </div>
 
       <div className="page-inner" style={{ paddingTop: 16 }}>
+        <div style={{ fontSize: 12, color: '#6b6b73', marginBottom: 12 }}>P = preparatória (não conta no volume) · números = séries válidas</div>
         {session.exercises.length === 0 && (
           <div className="card" style={{ textAlign: 'center', padding: 28, marginBottom: 16 }}>
             <div style={{ fontSize: 15, fontWeight: 500, marginBottom: 6 }}>Nenhum exercício ainda</div>
@@ -408,7 +408,10 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
           const partner = pe?.biSetWithId ? planDay?.exercises.find(e => e.id === pe.biSetWithId) : undefined;
           const last = getLastPerformance(log.exerciseId, session.id);
           const record = getExerciseRecords(log.exerciseId, session.id);
-          const doneCount = log.sets.filter(s => s.done).length;
+          const doneCount = log.sets.filter(s => s.done && !s.warmup).length;
+          const workingCount = log.sets.filter(s => !s.warmup).length;
+          let n = 0;
+          const labels = log.sets.map(s => (s.warmup ? 'P' : String(++n)));
           const cols = 2 + (prefs.showRIR ? 1 : 0) + (prefs.showRPE ? 1 : 0);
 
           return (
@@ -416,8 +419,8 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, gap: 8 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: 17, fontWeight: 600 }}>{ex?.name ?? 'Exercício removido'}</div>
-                  <div style={{ fontSize: 12, color: doneCount === log.sets.length && doneCount > 0 ? '#4CAF7A' : '#6b6b73', marginTop: 2 }}>
-                    {doneCount}/{log.sets.length} séries
+                  <div style={{ fontSize: 12, color: doneCount === workingCount && doneCount > 0 ? '#4CAF7A' : '#6b6b73', marginTop: 2 }}>
+                    {doneCount}/{workingCount} séries
                     {pe && ` · meta ${pe.repsMin}–${pe.repsMax} reps`}
                     {pe && pe.technique !== 'normal' && ` · ${pe.technique}`}
                     {partner && ` com ${getExercise(partner.exerciseId)?.name}`}
@@ -447,7 +450,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
               </div>
 
               {log.sets.map((set, si) => (
-                <SetRow key={si} idx={si} set={set} prefs={prefs}
+                <SetRow key={si} label={labels[si]} set={set} prefs={prefs}
                   onChange={u => mapLog(ei, l => ({ ...l, sets: l.sets.map((s, i) => i === si ? u : s) }))}
                   onDone={() => markSetDone(ei, si)} />
               ))}

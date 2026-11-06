@@ -25,6 +25,7 @@ export interface PlannedExercise {
   restSeconds: number;
   technique: 'normal' | 'drop-set' | 'rest-pause' | 'bi-set';
   biSetWithId?: string;
+  warmupSets?: number;
   notes: string;
 }
 
@@ -51,6 +52,7 @@ export interface SetRecord {
   rir?: number;
   rpe?: number;
   done: boolean;
+  warmup?: boolean;
 }
 
 export interface ExerciseLog {

@@ -70,7 +70,7 @@ export default function SessionDetail({ sessionId, onNavigate }: Props) {
           )}
           <div>
             <div style={{ fontFamily: "'Fraunces', serif", fontSize: 28, fontWeight: 300, color: '#C8A96E' }}>
-              {session.exercises.reduce((acc, l) => acc + l.sets.filter(s => s.done).length, 0)}
+              {session.exercises.reduce((acc, l) => acc + l.sets.filter(s => s.done && !s.warmup).length, 0)}
             </div>
             <div style={{ fontSize: 12, color: '#525259' }}>séries feitas</div>
           </div>
@@ -79,7 +79,7 @@ export default function SessionDetail({ sessionId, onNavigate }: Props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {session.exercises.map((log, i) => {
             const ex = getExercise(log.exerciseId);
-            const doneSets = log.sets.filter(s => s.done);
+            const doneSets = log.sets.filter(s => s.done && !s.warmup);
             const maxWeight = doneSets.reduce((m, s) => Math.max(m, s.weight), 0);
 
             return (

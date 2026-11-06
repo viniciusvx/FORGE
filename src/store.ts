@@ -1,6 +1,7 @@
 import { STARTER_EXERCISES } from './data/starterExercises';
 import { ANATOMY_EXERCISES, resolveAnatomy, norm, getAnatomy } from './anatomy/data';
 import { MY_PLAN_DAYS, MY_PLAN_GOAL, MY_PLAN_NAME } from './data/myPlan';
+import type { MyPlanItem } from './data/myPlan';
 import type { Exercise, WorkoutPlan, WorkoutSession, BodyMeasurement, UserPrefs } from './types';
 
 const KEYS = {
@@ -166,8 +167,8 @@ export function addStarterExercises(): number {
 export function getLastPerformance(exerciseId: string, excludeSessionId?: string) {
   for (const session of getSessions()) {
     if (session.finishedAt == null || session.id === excludeSessionId) continue;
-    const log = session.exercises.find(l => l.exerciseId === exerciseId && l.sets.some(s => s.done));
-    if (log) return { date: session.startedAt, sets: log.sets.filter(s => s.done) };
+    const log = session.exercises.find(l => l.exerciseId === exerciseId && l.sets.some(s => s.done && !s.warmup));
+    if (log) return { date: session.startedAt, sets: log.sets.filter(s => s.done && !s.warmup) };
   }
   return undefined;
 }
@@ -185,7 +186,7 @@ export function getExerciseRecords(exerciseId: string, excludeSessionId?: string
       if (log.exerciseId !== exerciseId) continue;
       let vol = 0;
       for (const set of log.sets) {
-        if (!set.done) continue;
+        if (!set.done || set.warmup) continue;
         vol += set.weight * set.reps;
         if (set.weight > maxWeight) { maxWeight = set.weight; maxWeightDate = session.startedAt; }
         best1RM = Math.max(best1RM, estimate1RM(set.weight, set.reps));
@@ -222,43 +223,64 @@ export function addRoutineExercises(): number {
   return fresh.length;
 }
 
-const SEED_FLAG = 'forge.seed.minhaficha.v1';
+const SEED_FLAG = 'forge.seed.minhaficha.v2';
 
 export function hasMyPlan(): boolean {
   return getPlans().some(p => p.name === MY_PLAN_NAME);
 }
 
-export function seedMyPlan(): void {
+function writeMyPlan(): void {
   const exercises = getExercises();
   const now = Date.now();
   const byName = new Map(exercises.map(e => [norm(e.name), e]));
-  const ensure = (name: string, key: string, equipment?: Exercise['equipment']): Exercise => {
-    const found = byName.get(norm(name));
-    if (found) return found;
-    const a = getAnatomy(key);
+  const ensure = (it: MyPlanItem): Exercise => {
+    const found = byName.get(norm(it.name));
+    if (found) {
+      if (!found.mapKey) found.mapKey = it.key;
+      return found;
+    }
+    const a = getAnatomy(it.key);
     const ex: Exercise = {
-      id: uid(), name, muscleGroup: a?.group ?? 'other', secondaryMuscles: [],
-      equipment: equipment ?? a?.equipment ?? 'other', notes: '', createdAt: now, mapKey: key,
+      id: uid(), name: it.name, muscleGroup: a?.group ?? 'other', secondaryMuscles: [],
+      equipment: it.equipment ?? a?.equipment ?? 'other', notes: '', createdAt: now, mapKey: it.key,
     };
     exercises.push(ex);
-    byName.set(norm(name), ex);
+    byName.set(norm(ex.name), ex);
     return ex;
   };
+  const prev = getPlans().find(p => p.name === MY_PLAN_NAME);
   const days = MY_PLAN_DAYS.map(d => ({
-    id: uid(), label: d.label, weekday: d.weekday,
+    id: prev?.days.find(x => x.weekday === d.weekday)?.id ?? uid(),
+    label: d.label,
+    weekday: d.weekday,
     exercises: d.items.map(it => ({
-      id: uid(), exerciseId: ensure(it.name, it.key, it.equipment).id,
-      sets: 3, repsMin: 8, repsMax: 12, restSeconds: 90, technique: 'normal' as const, notes: '',
+      id: uid(),
+      exerciseId: ensure(it).id,
+      sets: it.sets,
+      repsMin: it.repsMin,
+      repsMax: it.repsMax,
+      restSeconds: 90,
+      technique: 'normal' as const,
+      notes: '',
+      warmupSets: it.warmup ?? 0,
     })),
   }));
+  const plan: WorkoutPlan = {
+    id: prev?.id ?? uid(), name: MY_PLAN_NAME, goal: MY_PLAN_GOAL, days,
+    createdAt: prev?.createdAt ?? now, updatedAt: now,
+  };
   write(KEYS.exercises, exercises);
-  write(KEYS.plans, [...getPlans(), { id: uid(), name: MY_PLAN_NAME, goal: MY_PLAN_GOAL, days, createdAt: now, updatedAt: now }]);
+  write(KEYS.plans, [...getPlans().filter(p => p.id !== plan.id), plan]);
+}
+
+export function seedMyPlan(): void {
+  writeMyPlan();
 }
 
 export function seedMyPlanOnce(): void {
   try {
     if (localStorage.getItem(SEED_FLAG)) return;
-    if (!hasMyPlan()) seedMyPlan();
+    writeMyPlan();
     localStorage.setItem(SEED_FLAG, '1');
   } catch {}
 }

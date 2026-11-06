@@ -1,4 +1,4 @@
-const CACHE = 'forge-v5';
+const CACHE = 'forge-v6';
 const SHELL = ['/', '/index.html'];
 
 self.addEventListener('install', e => {

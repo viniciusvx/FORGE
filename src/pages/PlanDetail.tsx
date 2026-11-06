@@ -45,12 +45,12 @@ function ExerciseRow({ pe, index, total, siblings, onChange, onRemove, onMove }:
   const partner = pe.biSetWithId ? siblings.find(s => s.id === pe.biSetWithId) : undefined;
   const partnerName = partner ? getExercise(partner.exerciseId)?.name : undefined;
 
-  const numField = (label: string, key: 'sets' | 'repsMin' | 'repsMax' | 'restSeconds', min: number, max: number) => (
+  const numField = (label: string, key: 'sets' | 'repsMin' | 'repsMax' | 'restSeconds' | 'warmupSets', min: number, max: number) => (
     <div key={key}>
       <label className="label-xs" style={{ display: 'block', marginBottom: 4 }}>{label}</label>
       <input
         type="number" inputMode="numeric" className="field" style={{ textAlign: 'center' }}
-        value={pe[key]} min={min} max={max}
+        value={pe[key] ?? 0} min={min} max={max}
         onChange={e => onChange({ ...pe, [key]: Math.min(max, Math.max(min, parseInt(e.target.value) || min)) })}
       />
     </div>
@@ -62,7 +62,7 @@ function ExerciseRow({ pe, index, total, siblings, onChange, onRemove, onMove }:
         <button onClick={() => setExpanded(e => !e)} style={{ flex: 1, textAlign: 'left', minWidth: 0, padding: '4px 0' }}>
           <div style={{ fontSize: 15, fontWeight: 500 }}>{ex.name}</div>
           <div style={{ fontSize: 12, color: '#6b6b73', marginTop: 2 }}>
-            {MUSCLE_LABELS[ex.muscleGroup]} · {pe.sets}×{pe.repsMin}–{pe.repsMax} · {pe.restSeconds}s
+            {MUSCLE_LABELS[ex.muscleGroup]} · {pe.sets}×{pe.repsMin}–{pe.repsMax} · {pe.restSeconds}s{pe.warmupSets ? ` · ${pe.warmupSets} prep.` : ''}
             {pe.technique !== 'normal' && ` · ${pe.technique}`}
             {partnerName && ` com ${partnerName}`}
           </div>
@@ -82,7 +82,10 @@ function ExerciseRow({ pe, index, total, siblings, onChange, onRemove, onMove }:
             {numField('Rep. mín', 'repsMin', 1, 100)}
             {numField('Rep. máx', 'repsMax', 1, 100)}
           </div>
-          {numField('Descanso (segundos)', 'restSeconds', 0, 600)}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {numField('Descanso (s)', 'restSeconds', 0, 600)}
+            {numField('Preparatórias', 'warmupSets', 0, 5)}
+          </div>
 
           <div>
             <label className="label-xs" style={{ display: 'block', marginBottom: 8 }}>Técnica</label>
