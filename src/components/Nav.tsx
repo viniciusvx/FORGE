@@ -31,7 +31,6 @@ function MenuDrawer({ view, onNavigate, onClose }: MenuDrawerProps) {
       label: 'Dados',
       items: [
         { screen: 'exercises', label: 'Exercícios', Icon: DumbbellIcon },
-        { screen: 'anatomy', label: 'Análise muscular', Icon: BodyIcon },
         { screen: 'history', label: 'Histórico', Icon: ClipboardIcon },
         { screen: 'body', label: 'Medidas Corporais', Icon: BodyIcon },
       ] as const,
@@ -98,7 +97,7 @@ function MenuDrawer({ view, onNavigate, onClose }: MenuDrawerProps) {
 export default function Nav({ view, onNavigate }: NavProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const inMenuSection = ['exercises', 'anatomy', 'history', 'body', 'settings', 'install'].includes(view.screen);
+  const inMenuSection = ['exercises', 'history', 'body', 'settings', 'install'].includes(view.screen);
 
   return (
     <>

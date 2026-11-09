@@ -113,7 +113,6 @@ export type View =
   | { screen: 'body' }
   | { screen: 'settings' }
   | { screen: 'install' }
-  | { screen: 'anatomy'; exerciseKey?: string };
 
 export const MUSCLE_LABELS: Record<MuscleGroup, string> = {
   chest: 'Peito',

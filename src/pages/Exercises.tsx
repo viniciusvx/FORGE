@@ -49,7 +49,7 @@ export default function Exercises({ onNavigate }: Props) {
 
         {all.length > 0 && (
           <button className="btn btn-ghost btn-sm btn-full" style={{ marginBottom: 12 }} onClick={() => { addRoutineExercises(); force(n => n + 1); }}>
-            Adicionar minha rotina com análise muscular
+            Adicionar exercícios da minha rotina
           </button>
         )}
 
@@ -74,7 +74,7 @@ export default function Exercises({ onNavigate }: Props) {
                     Adicionar exercício
                   </button>
                   <button className="btn btn-outline" onClick={() => { addRoutineExercises(); force(n => n + 1); }}>
-                    Carregar minha rotina (com análise muscular)
+                    Carregar exercícios da minha rotina
                   </button>
                   <button className="btn btn-ghost" onClick={() => { addStarterExercises(); force(n => n + 1); }}>
                     Carregar exercícios básicos

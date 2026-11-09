@@ -117,7 +117,7 @@ export default function ExercisePicker({ onAdd, onClose }: Props) {
             <div style={{ fontSize: 14, marginBottom: 4 }}>Sua biblioteca está vazia</div>
             <div style={{ fontSize: 12, color: '#6b6b73', marginBottom: 12 }}>Crie os seus ou carregue uma lista básica de exercícios comuns (você pode editar e apagar depois).</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <button className="btn btn-outline btn-sm" onClick={() => { addRoutineExercises(); setVersion(v => v + 1); }}>Carregar minha rotina (com análise muscular)</button>
+              <button className="btn btn-outline btn-sm" onClick={() => { addRoutineExercises(); setVersion(v => v + 1); }}>Carregar exercícios da minha rotina</button>
               <button className="btn btn-ghost btn-sm" onClick={loadStarter}>Carregar exercícios básicos</button>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default function ExercisePicker({ onAdd, onClose }: Props) {
 
         {all.length > 0 && (
           <button className="btn btn-ghost btn-sm btn-full" style={{ marginTop: 8 }} onClick={() => { addRoutineExercises(); setVersion(v => v + 1); }}>
-            Adicionar minha rotina (com análise muscular)
+            Adicionar exercícios da minha rotina
           </button>
         )}
 

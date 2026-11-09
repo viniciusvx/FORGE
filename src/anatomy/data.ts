@@ -262,6 +262,14 @@ export const ANATOMY_EXERCISES: AnatomyExercise[] = [
     evidence: 'Sem estudo que mostre diferença entre as porções do peitoral por regulagem do peck deck; o mapeamento segue a anatomia das fibras.',
   },
   {
+    key: 'crucifixo-inferior', name: 'Crucifixo (parte inferior do peito)', aliases: ['crucifixo inferior', 'crucifixo parte inferior do peito'],
+    group: 'chest', equipment: 'cable',
+    primary: ['pec_stern'], secondary: ['pec_abd', 'pec_clav', 'delt_ant'],
+    summary: 'Crucifixo de cima para baixo: a adução horizontal com o braço descendo alinha a força com as fibras inferiores do peitoral.',
+    execution: 'Polias acima dos ombros, cotovelos levemente flexionados; traga as mãos para baixo e para dentro, à frente da parte baixa do abdômen.',
+    note: 'Pode ser feito no crossover (polia alta) ou com halteres no banco declinado.',
+  },
+  {
     key: 'triceps-overhead', name: 'Extensão de tríceps acima da cabeça', aliases: ['extensao de triceps acima da cabeca'],
     group: 'triceps', equipment: 'other',
     primary: ['triceps_long'], secondary: ['triceps_lat', 'triceps_med'],

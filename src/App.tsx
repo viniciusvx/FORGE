@@ -14,7 +14,6 @@ import Progress from './pages/Progress';
 import Body from './pages/Body';
 import Settings from './pages/Settings';
 import Install from './pages/Install';
-import Anatomy from './pages/Anatomy';
 
 function readView(): View {
   try {
@@ -56,7 +55,6 @@ export default function App() {
       case 'body': return <Body onNavigate={setView} />;
       case 'settings': return <Settings onNavigate={setView} />;
       case 'install': return <Install onNavigate={setView} />;
-      case 'anatomy': return <Anatomy key={view.exerciseKey} exerciseKey={view.exerciseKey} onNavigate={setView} />;
       default: return <Home onNavigate={setView} />;
     }
   }

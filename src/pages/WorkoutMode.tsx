@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import type { View, WorkoutPlan, PlanDay, WorkoutSession, ExerciseLog, SetRecord } from '../types';
 import {
   getPlans, getPlan, getExercise, getActiveSession, saveActiveSession, saveSession,
   getLastSessionForDay, getLastPerformance, getExerciseRecords, suggestNextDay, uid, getPrefs,
 } from '../store';
-import { ChevronLeftIcon, CheckIcon, TimerIcon, PlusIcon, XIcon, StopIcon, ChevronRightIcon, DumbbellIcon, BodyIcon } from '../components/Icons';
+import { ChevronLeftIcon, CheckIcon, TimerIcon, PlusIcon, XIcon, StopIcon, ChevronRightIcon, DumbbellIcon } from '../components/Icons';
 import Sheet from '../components/Sheet';
 import ExercisePicker from '../components/ExercisePicker';
-import { MuscleSheet } from '../components/ExerciseAnatomy';
 
 interface Props {
   planId?: string;
@@ -16,57 +15,126 @@ interface Props {
   onNavigate: (v: View) => void;
 }
 
-function RestBar({ seconds, onClose }: { seconds: number; onClose: () => void }) {
-  const [endAt, setEndAt] = useState(() => Date.now() + seconds * 1000);
-  const [total, setTotal] = useState(seconds);
-  const [now, setNow] = useState(Date.now());
-  const done = useRef(false);
+const REST_KEY = 'forge.rest';
+interface RestState { duration: number; endAt: number | null; pausedLeft: number | null; total: number; }
 
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(t);
-  }, []);
-
-  const remaining = Math.max(0, Math.ceil((endAt - now) / 1000));
-
-  useEffect(() => {
-    if (remaining <= 0 && !done.current) {
-      done.current = true;
-      try { navigator.vibrate?.([200, 100, 200]); } catch {}
-      const t = setTimeout(onClose, 1500);
-      return () => clearTimeout(t);
+function readRest(fallback: number): RestState {
+  try {
+    const raw = localStorage.getItem(REST_KEY);
+    if (raw) {
+      const r = JSON.parse(raw) as RestState;
+      if (r.endAt && r.endAt < Date.now()) return { ...r, endAt: null };
+      return r;
     }
-  }, [remaining]);
+  } catch {}
+  return { duration: fallback, endAt: null, pausedLeft: null, total: fallback };
+}
 
-  function adjust(delta: number) {
-    done.current = false;
-    setEndAt(e => Math.max(Date.now() + 1000, e + delta * 1000));
-    setTotal(t => Math.max(1, t + delta));
+const fmtClock = (sec: number) => `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+
+function RestDock({ defaultSeconds, trigger }: { defaultSeconds: number; trigger: { key: number; seconds: number } | null }) {
+  const [st, setSt] = useState<RestState>(() => readRest(defaultSeconds));
+  const [now, setNow] = useState(Date.now());
+  const [flash, setFlash] = useState(false);
+
+  function update(next: RestState) {
+    setSt(next);
+    try { localStorage.setItem(REST_KEY, JSON.stringify(next)); } catch {}
   }
 
-  const r = 18, circ = 2 * Math.PI * r;
-  const pct = Math.min(1, remaining / total);
+  const running = st.endAt != null;
+  const paused = st.pausedLeft != null;
+  const active = running || paused;
+
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(t);
+  }, [running]);
+
+  useEffect(() => {
+    if (trigger) {
+      setFlash(false);
+      update({ duration: st.duration, endAt: Date.now() + trigger.seconds * 1000, pausedLeft: null, total: trigger.seconds });
+    }
+  }, [trigger?.key]);
+
+  const remaining = running ? Math.max(0, Math.ceil(((st.endAt as number) - now) / 1000)) : paused ? (st.pausedLeft as number) : st.duration;
+
+  useEffect(() => {
+    if (running && remaining <= 0) {
+      try { navigator.vibrate?.([200, 100, 200, 100, 300]); } catch {}
+      setFlash(true);
+      update({ ...st, endAt: null, pausedLeft: null });
+    }
+  }, [running, remaining]);
+
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(false), 2500);
+    return () => clearTimeout(t);
+  }, [flash]);
+
+  function tap() {
+    setFlash(false);
+    if (running) update({ ...st, endAt: null, pausedLeft: remaining });
+    else if (paused) update({ ...st, endAt: Date.now() + (st.pausedLeft as number) * 1000, pausedLeft: null });
+    else update({ ...st, endAt: Date.now() + st.duration * 1000, total: st.duration });
+  }
+
+  function adjust(delta: number) {
+    if (running) {
+      update({ ...st, endAt: Math.max(Date.now() + 1000, (st.endAt as number) + delta * 1000), total: Math.max(1, st.total + delta) });
+    } else if (paused) {
+      update({ ...st, pausedLeft: Math.max(1, (st.pausedLeft as number) + delta), total: Math.max(1, st.total + delta) });
+    } else {
+      const d = Math.min(600, Math.max(15, st.duration + delta));
+      update({ ...st, duration: d, total: d });
+    }
+  }
+
+  function stop() {
+    setFlash(false);
+    update({ ...st, endAt: null, pausedLeft: null });
+  }
+
+  const size = 72, r = 32, circ = 2 * Math.PI * r;
+  const pct = active ? Math.min(1, remaining / Math.max(1, st.total)) : 1;
+  const gold = '#C8A96E';
+  const side: React.CSSProperties = {
+    width: 48, height: 48, borderRadius: 24, background: 'rgba(30,30,38,0.96)', border: '1px solid rgba(255,255,255,0.12)',
+    color: '#EFEDE7', fontSize: 15, fontWeight: 600, fontVariantNumeric: 'tabular-nums', boxShadow: '0 6px 20px rgba(0,0,0,0.45)',
+  };
 
   return createPortal(
     <div style={{
-      position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 90, padding: '10px 16px',
-      paddingBottom: 'calc(10px + env(safe-area-inset-bottom))', background: 'rgba(22,22,28,0.97)',
-      borderTop: '1px solid rgba(200,169,110,0.35)', backdropFilter: 'blur(12px)',
+      position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 90, pointerEvents: 'none',
+      paddingBottom: 'calc(10px + env(safe-area-inset-bottom))', paddingTop: 8,
+      background: 'rgba(14,14,18,0.97)', borderTop: '1px solid rgba(200,169,110,0.25)', backdropFilter: 'blur(12px)',
     }}>
-      <div style={{ maxWidth: 640, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <svg width={44} height={44} style={{ transform: 'rotate(-90deg)', flexShrink: 0 }}>
-          <circle cx={22} cy={22} r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth={3} />
-          <circle cx={22} cy={22} r={r} fill="none" stroke="#C8A96E" strokeWidth={3} strokeDasharray={`${circ * pct} ${circ}`} strokeLinecap="round" />
-        </svg>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="label-xs" style={{ color: '#C8A96E' }}>{remaining > 0 ? 'Descanso' : 'Hora da próxima série'}</div>
-          <div style={{ fontFamily: "'Fraunces', serif", fontSize: 26, fontWeight: 300, lineHeight: 1.1 }}>
-            {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}
-          </div>
-        </div>
-        <button className="btn btn-ghost btn-sm" onClick={() => adjust(-15)}>−15</button>
-        <button className="btn btn-ghost btn-sm" onClick={() => adjust(15)}>+15</button>
-        <button className="btn btn-primary btn-sm" onClick={onClose}>Pular</button>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, marginBottom: 6, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: flash ? '#4CAF7A' : gold }}>
+        <span>{flash ? 'Hora da próxima série' : running ? 'Descanso · toque p/ pausar' : paused ? 'Pausado · toque p/ continuar' : 'Descanso · toque p/ iniciar'}</span>
+        {active && <button onClick={stop} style={{ pointerEvents: 'auto', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#8a8a92', textDecoration: 'underline' }}>Parar</button>}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+        <button style={{ ...side, pointerEvents: 'auto' }} onClick={() => adjust(-15)} aria-label="Menos 15 segundos">−15</button>
+        <button onClick={tap} aria-label="Timer de descanso" style={{
+          pointerEvents: 'auto', position: 'relative', width: size, height: size, borderRadius: size / 2,
+          background: flash ? '#4CAF7A' : running ? '#1a1a21' : gold, color: running ? '#EFEDE7' : '#0A0A0D',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          {active && (
+            <svg width={size} height={size} style={{ position: 'absolute', inset: 0, transform: 'rotate(-90deg)' }}>
+              <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={4} />
+              <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={paused ? '#8a8a92' : gold} strokeWidth={4}
+                strokeDasharray={`${circ * pct} ${circ}`} strokeLinecap="round" />
+            </svg>
+          )}
+          <span style={{ position: 'relative', fontFamily: "'Fraunces', serif", fontSize: 21, fontWeight: 400, fontVariantNumeric: 'tabular-nums' }}>
+            {flash ? 'Vai!' : fmtClock(remaining)}
+          </span>
+        </button>
+        <button style={{ ...side, pointerEvents: 'auto' }} onClick={() => adjust(15)} aria-label="Mais 15 segundos">+15</button>
       </div>
     </div>,
     document.body
@@ -225,7 +293,6 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
   const [timer, setTimer] = useState<{ key: number; seconds: number } | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [confirmFinish, setConfirmFinish] = useState(false);
-  const [musclesFor, setMusclesFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session) return;
@@ -373,7 +440,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
   const planDay = plan?.days.find(d => d.id === session.dayId);
 
   return (
-    <div className="page no-nav animate-fade-in" style={{ paddingBottom: timer ? 120 : undefined }}>
+    <div className="page no-nav animate-fade-in" style={{ paddingBottom: 'calc(130px + env(safe-area-inset-bottom))' }}>
       <div style={{
         position: 'sticky', top: 0, zIndex: 20, background: 'rgba(10,10,13,0.94)', backdropFilter: 'blur(12px)',
         borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '10px 12px 10px 8px', paddingTop: 'calc(10px + env(safe-area-inset-top))',
@@ -427,7 +494,6 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexShrink: 0 }}>
-                  <button className="icon-btn" style={{ width: 36, height: 36 }} onClick={() => setMusclesFor(log.exerciseId)} aria-label="Ver músculos"><BodyIcon size={18} /></button>
                   <button className="icon-btn" style={{ width: 36, height: 36 }} onClick={() => removeExercise(ei)} aria-label="Remover exercício"><XIcon size={16} /></button>
                 </div>
               </div>
@@ -480,8 +546,7 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
         </button>
       </div>
 
-      {musclesFor && <MuscleSheet exerciseId={musclesFor} onClose={() => setMusclesFor(null)} />}
-      {timer && <RestBar key={timer.key} seconds={timer.seconds} onClose={() => setTimer(null)} />}
+      <RestDock defaultSeconds={prefs.restTimerDefault} trigger={timer} />
       {showAddExercise && <ExercisePicker onAdd={addExerciseToSession} onClose={() => setShowAddExercise(false)} />}
 
       {confirmFinish && (

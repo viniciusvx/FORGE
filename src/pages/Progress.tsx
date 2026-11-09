@@ -137,7 +137,7 @@ export default function Progress({ onNavigate }: Props) {
                   {pickedRegion ? `${MUSCLES[pickedRegion].name}: ${Math.round((regionSets[pickedRegion] ?? 0) * 10) / 10} séries equivalentes` : 'Toque em um músculo para ver o volume.'}
                 </div>
                 <div style={{ fontSize: 11, color: '#6b6b73', marginTop: 6, lineHeight: 1.5 }}>
-                  Cada série conta 1 para o músculo principal e 0,5 para os que participam. {unmapped > 0 ? `${unmapped} exercício${unmapped > 1 ? 's' : ''} sem análise muscular não ${unmapped > 1 ? 'entram' : 'entra'} neste mapa.` : ''}
+                  Cada série conta 1 para o músculo principal e 0,5 para os que participam. {unmapped > 0 ? `${unmapped} exercício${unmapped > 1 ? 's' : ''} sem mapeamento muscular não ${unmapped > 1 ? 'entram' : 'entra'} neste mapa.` : ''}
                 </div>
                 <div style={{ marginTop: 16 }}>
                   {muscleRows.map(m => {

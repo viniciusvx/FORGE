@@ -20,7 +20,7 @@ export const MY_PLAN_DAYS: MyPlanDay[] = [
     items: [
       { name: 'Supino inclinado com halteres', key: 'supino-inclinado', equipment: 'dumbbell', sets: 3, repsMin: 6, repsMax: 12, warmup: 2 },
       { name: 'Supino reto com halteres', key: 'supino-reto', equipment: 'dumbbell', sets: 3, repsMin: 6, repsMax: 12 },
-      { name: 'Peck deck', key: 'peck-deck', equipment: 'machine', sets: 2, repsMin: 10, repsMax: 15 },
+      { name: 'Crucifixo (parte inferior do peito)', key: 'crucifixo-inferior', equipment: 'cable', sets: 2, repsMin: 10, repsMax: 15 },
       { name: 'Extensão de tríceps acima da cabeça', key: 'triceps-overhead', sets: 3, repsMin: 10, repsMax: 15, warmup: 2 },
       { name: 'Tríceps pulley barra V', key: 'triceps-polia-v', equipment: 'cable', sets: 2, repsMin: 10, repsMax: 15 },
     ],
@@ -60,7 +60,7 @@ export const MY_PLAN_DAYS: MyPlanDay[] = [
     label: 'SÁB · Peito e costas', weekday: 6,
     items: [
       { name: 'Supino inclinado com halteres', key: 'supino-inclinado', equipment: 'dumbbell', sets: 2, repsMin: 6, repsMax: 12, warmup: 2 },
-      { name: 'Peck deck', key: 'peck-deck', equipment: 'machine', sets: 2, repsMin: 10, repsMax: 15 },
+      { name: 'Crucifixo (parte inferior do peito)', key: 'crucifixo-inferior', equipment: 'cable', sets: 2, repsMin: 10, repsMax: 15 },
       { name: 'Puxada alta', key: 'puxada-alta-polia', equipment: 'cable', sets: 2, repsMin: 8, repsMax: 12, warmup: 2 },
       { name: 'Remada baixa máquina pegada fechada', key: 'remada-baixa-fechada', equipment: 'machine', sets: 2, repsMin: 8, repsMax: 12 },
       { name: 'Rosca inversa na polia', key: 'rosca-inversa', equipment: 'cable', sets: 2, repsMin: 12, repsMax: 15 },
