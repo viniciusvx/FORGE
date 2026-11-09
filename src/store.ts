@@ -280,6 +280,8 @@ export function seedMyPlan(): void {
 export function seedMyPlanOnce(): void {
   try {
     if (localStorage.getItem(SEED_FLAG)) return;
+    // Never rewrite the plan mid-workout: the open session points at its exercises.
+    if (getActiveSession()) return;
     writeMyPlan();
     localStorage.setItem(SEED_FLAG, '1');
   } catch {}

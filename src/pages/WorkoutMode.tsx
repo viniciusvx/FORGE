@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import type { View, WorkoutPlan, PlanDay, WorkoutSession, ExerciseLog, SetRecord } from '../types';
 import {
   getPlans, getPlan, getExercise, getActiveSession, saveActiveSession, saveSession,
-  getLastSessionForDay, getLastPerformance, getExerciseRecords, suggestNextDay, uid, getPrefs,
+  getLastSessionForDay, getLastPerformance, getExerciseRecords, suggestNextDay, uid, getPrefs, seedMyPlanOnce,
 } from '../store';
 import { ChevronLeftIcon, CheckIcon, TimerIcon, PlusIcon, XIcon, StopIcon, ChevronRightIcon, DumbbellIcon } from '../components/Icons';
 import Sheet from '../components/Sheet';
@@ -395,12 +395,14 @@ export default function WorkoutMode({ planId, dayId, onNavigate }: Props) {
     };
     saveSession(finished);
     saveActiveSession(null);
+    seedMyPlanOnce();
     setSessionRaw(null);
     onNavigate({ screen: 'session-detail', sessionId: finished.id });
   }
 
   function discardWorkout() {
     saveActiveSession(null);
+    seedMyPlanOnce();
     setSessionRaw(null);
     onNavigate({ screen: 'home' });
   }
