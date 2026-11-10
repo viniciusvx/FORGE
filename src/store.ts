@@ -125,6 +125,9 @@ export function importAllData(json: string): void {
   if (data.sessions) write(KEYS.sessions, data.sessions);
   if (data.measurements) write(KEYS.measurements, data.measurements);
   if (data.prefs) write(KEYS.prefs, data.prefs);
+  // A backup from an older version carries the old routine: reapply the current one.
+  try { localStorage.removeItem(SEED_FLAG); } catch {}
+  seedMyPlanOnce();
 }
 
 export function getLastSessionForDay(planId: string, dayId: string): WorkoutSession | undefined {
